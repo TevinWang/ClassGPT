@@ -1,3 +1,4 @@
+
 import base64
 import logging
 import os
@@ -55,11 +56,12 @@ def parse_pdf(file: BytesIO):
 
     return [Document(text)]
 
+"""
+Create an index for a given PDF file and upload it to S3.
+Handles index creation and caching
+"""
 
-def create_index(pdf_obj, folder_name, file_name):
-    """
-    Create an index for a given PDF file and upload it to S3.
-    """
+index_name = file_name.replace(".pdf", ".json")
     index_name = file_name.replace(".pdf", ".json")
 
     logging.info("Generating new index...")
@@ -80,11 +82,12 @@ def create_index(pdf_obj, folder_name, file_name):
     return index
 
 
-@st.cache_resource(show_spinner=False)
-def get_index(folder_name, file_name):
-    """
-    Get the index for a given PDF file.
-    """
+"""
+Get the index for a given PDF file.
+Checks if index already exists, otherwise generates a new one
+Uses caching for performance
+
+index_name = file_name.replace(".pdf", ".json")
     index_name = file_name.replace(".pdf", ".json")
     index = None
 
@@ -129,12 +132,13 @@ def query_gpt(chosen_class, chosen_pdf, query):
     return response
 
 
+
 @st.cache_resource
 def create_tool(_index, chosen_pdf):
+    """Create a Tool for the LLMAgent using the index"""
     tools = [
         Tool(
             name=f"{chosen_pdf} index",
-            func=lambda q: str(_index.query(q)),
             description="Useful to answering questions about the given file",
             return_direct=True,
         ),
@@ -143,12 +147,14 @@ def create_tool(_index, chosen_pdf):
     return tools
 
 
+
 @st.cache_resource
 def create_agent(chosen_class, chosen_pdf):
+    """Create an agent for conversations using the index as a tool"""
+
     memory = ConversationBufferMemory(memory_key="chat_history")
     llm = OpenAI(temperature=0, model_name="gpt-3.5-turbo")
 
-    index = get_index(chosen_class, chosen_pdf)
     tools = create_tool(index, chosen_pdf)
 
     agent = initialize_agent(
@@ -157,11 +163,12 @@ def create_agent(chosen_class, chosen_pdf):
 
     return agent
 
-
 def query_gpt_memory(chosen_class, chosen_pdf, query):
 
+    # Get cached agent
     agent = create_agent(chosen_class, chosen_pdf)
     res = ""
+
 
     try:
         res = agent.run(input=query)
@@ -174,13 +181,13 @@ def query_gpt_memory(chosen_class, chosen_pdf, query):
     return res
 
 
-# ------------------- Render PDF ------------------- #
-
 
 @st.cache_data
 def show_pdf(folder_name, file_name):
+    """Display a PDF file from S3 in the Streamlit app"""
 
     with tempfile.NamedTemporaryFile("wb") as f_src:
+        logging.info(f"Downloading {file_name}...")
         logging.info(f"Downloading {file_name}...")
         s3.download_file(f"{folder_name}/{file_name}", f_src.name)
 
@@ -188,13 +195,4 @@ def show_pdf(folder_name, file_name):
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
 
         pdf_display = f"""
-        <iframe
-            src="data:application/pdf;base64,{base64_pdf}"
-            width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
-        """
-
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        
