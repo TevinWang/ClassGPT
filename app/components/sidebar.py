@@ -1,3 +1,4 @@
+
 import os
 
 import streamlit as st
@@ -18,11 +19,14 @@ def sidebar():
             value="",
         )
 
+        show_history = st.checkbox("Show conversation history")
+
+        if show_history:
+            st.write(st.session_state.conversation_history)
+
         if api_key_input:
             os.environ["OPENAI_API_KEY"] = api_key_input
             st.success("API key set")
-
-        st.markdown(
             """
             ---
             ## About
@@ -37,3 +41,4 @@ def sidebar():
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
             """
         )
+
