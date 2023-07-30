@@ -1,3 +1,4 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
@@ -36,11 +37,11 @@ with tab1:
                                 uploaded_file, f"{chosen_class}/{uploaded_file.name}"
                             )
 
-                        st.success(f"{len(uploaded_files)} files uploaded")
-
-
-with tab2:
-    st.subheader("Add a new class")
+                        chosen_class = st.selectbox(
+                           label='Select a class to upload to',
+                           'Select a class',
+                           list(all_classes.keys()) + ['--'],
+                           index=len(all_classes),
 
     with st.form("add_class"):
         add_class = st.text_input("Enter a new class name")
@@ -53,13 +54,12 @@ with tab2:
             else:
                 s3.create_folder(add_class)
                 st.success(f"Class {add_class} added")
-
-with tab3:
-    st.subheader("Delete a class or a PDF file")
-
-    chosen_class = st.selectbox(
-        "Select a class to delete",
-        list(all_classes.keys()) + ["--"],
+                               submit_button = st.form_submit_button('Upload')
+                               if submit_button:
+                                   # Validate input
+                                   if len(uploaded_files) == 0:
+                                       st.error("Please upload at least one file")
+                                   else:
         index=len(all_classes),
     )
 
@@ -72,16 +72,27 @@ with tab3:
         chosen_pdf = st.selectbox(
             "Select a PDF file or choose 'all' to delete the whole class",
             all_pdfs + ["--"],
-            index=len(all_pdfs),
-        )
-
-        if chosen_pdf != "--":
-            submit_button = st.button("Remove")
-
-            if submit_button:
+                               submit_button = st.form_submit_button('Add')
+                               if submit_button:
+                                   # Validate input
+                                   if add_class == "":
+                                       st.error("Please enter a class name")
+                                   else:
                 if chosen_pdf == "all":
                     s3.remove_folder(chosen_class)
                     st.success(f"{chosen_class} removed")
                 else:
                     s3.remove_file(chosen_class, chosen_pdf)
                     st.success(f"{chosen_pdf} removed")
+
+                               chosen_pdf = st.selectbox(
+                                   label='Select a file to delete',
+                                   'Select a PDF file or choose 'all' to delete the whole class',
+                                   all_pdfs + ['--'],
+                                   index=len(all_pdfs),
+                                   submit_button = st.button('Remove')
+                                   if submit_button:
+                                       # Confirm before deleting
+                                       if chosen_pdf == "all":
+                                           s3.remove_folder(chosen_class)
+                                           st.success(f"{chosen_class} removed")
