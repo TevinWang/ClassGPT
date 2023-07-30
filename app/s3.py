@@ -1,3 +1,4 @@
+
 from collections import defaultdict
 
 import boto3
@@ -32,26 +33,32 @@ class S3:
         self.s3 = boto3.resource("s3")
         self.bucket = self.s3.Bucket(bucket_name)
 
-    def list_folders(self):
-        folders = set()
         for obj in self.bucket.objects.filter():
             folders.add(obj.key.split("/")[0])
 
-        return folders
+        # Sort folder names alphabetically
+        sorted_folders = sorted(list(folders))
+        
+        return sorted_folders
 
+
+    def list_files(self):
+        classes = defaultdict(list)
     def list_files(self):
         classes = defaultdict(list)
 
         # loop through only the parent directory
-        for obj in self.bucket.objects.filter():
-            cname, fname = obj.key.split("/")
             if not fname.endswith(".json"):
                 classes[cname].append(fname)
 
-        return classes
+        # Sort file names alphabetically for each class
+        for cname in classes:
+            classes[cname].sort()
+            
+        return dict(classes)
+
 
     def folder_exists(self, folder_name):
-        for _ in self.bucket.objects.filter(Prefix=f"{folder_name}/"):
             return True
         return False
 
@@ -85,3 +92,4 @@ class S3:
 
     def download_file(self, from_file_path, to_file_path):
         self.bucket.download_file(from_file_path, to_file_path)
+
