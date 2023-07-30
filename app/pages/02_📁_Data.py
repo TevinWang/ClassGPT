@@ -1,6 +1,8 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
+
 
 sidebar()
 bucket_name = "classgpt"
@@ -72,12 +74,13 @@ with tab3:
         chosen_pdf = st.selectbox(
             "Select a PDF file or choose 'all' to delete the whole class",
             all_pdfs + ["--"],
-            index=len(all_pdfs),
-        )
-
-        if chosen_pdf != "--":
-            submit_button = st.button("Remove")
-
+                if chosen_pdf == "all":
+                    s3.remove_folder(chosen_class)
+                    st.success(f"{chosen_class} removed")
+                    st.experimental_rerun()
+                else:
+                    s3.remove_file(chosen_class, chosen_pdf)
+                    st.success(f"{chosen_pdf} removed")
             if submit_button:
                 if chosen_pdf == "all":
                     s3.remove_folder(chosen_class)
@@ -85,3 +88,4 @@ with tab3:
                 else:
                     s3.remove_file(chosen_class, chosen_pdf)
                     st.success(f"{chosen_pdf} removed")
+
