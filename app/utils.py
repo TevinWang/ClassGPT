@@ -1,5 +1,7 @@
+# Imports
 import base64
 import logging
+import os
 import os
 import sys
 import tempfile
@@ -31,19 +33,22 @@ else:
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-s3 = S3("classgpt")
-
-
-# ------------------- index creation ------------------- #
-
+load_dotenv()
+if os.getenv("OPENAI_API_KEY") is None:
+    # Validate OpenAI key is set
+    # Show error message
+    st.error("OpenAI API key not set")
+else:
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def parse_pdf(file: BytesIO):
 
-    pdf = PdfReader(file)
-    text_list = []
+s3 = S3("classgpt")
 
-    # Get the number of pages in the PDF document
-    num_pages = len(pdf.pages)
+# ------------------- Index creation ------------------- #
+
+def parse_pdf(file: BytesIO):
+
 
     # Iterate over every page
     for page in range(num_pages):
@@ -55,12 +60,14 @@ def parse_pdf(file: BytesIO):
 
     return [Document(text)]
 
+    return [Document(text)]
 
+
+# Create index for a PDF and upload to S3
+# Called when new PDF is uploaded
 def create_index(pdf_obj, folder_name, file_name):
     """
     Create an index for a given PDF file and upload it to S3.
-    """
-    index_name = file_name.replace(".pdf", ".json")
 
     logging.info("Generating new index...")
     documents = parse_pdf(pdf_obj)
@@ -78,12 +85,14 @@ def create_index(pdf_obj, folder_name, file_name):
             s3.upload_files(f, f"{folder_name}/{index_name}")
 
     return index
+    return index
 
 
+# Check if index exists for PDF, if not generate
+# Cache the index to avoid repeat generation
 @st.cache_resource(show_spinner=False)
 def get_index(folder_name, file_name):
     """
-    Get the index for a given PDF file.
     """
     index_name = file_name.replace(".pdf", ".json")
     index = None
@@ -110,12 +119,14 @@ def get_index(folder_name, file_name):
 def query_gpt(chosen_class, chosen_pdf, query):
 
     if not os.getenv("OPENAI_API_KEY"):
-        st.error("Enter your OpenAI API key in the sidebar.")
-        st.stop()
+    return index
 
-    # LLM Predictor (gpt-3.5-turbo)
-    llm_predictor = LLMPredictor(
-        llm=ChatOpenAI(
+
+# Query the index API
+# Handles calling API, formatting response etc.
+def query_gpt(chosen_class, chosen_pdf, query):
+
+    if not os.getenv("OPENAI_API_KEY"):
             temperature=0,
             model_name="gpt-3.5-turbo",
         )
@@ -132,12 +143,14 @@ def query_gpt(chosen_class, chosen_pdf, query):
 @st.cache_resource
 def create_tool(_index, chosen_pdf):
     tools = [
-        Tool(
-            name=f"{chosen_pdf} index",
-            func=lambda q: str(_index.query(q)),
-            description="Useful to answering questions about the given file",
-            return_direct=True,
-        ),
+    return response
+
+
+# Create tools for agent with index query function
+# Cache tools to avoid re-init'ing
+@st.cache_resource
+def create_tool(_index, chosen_pdf):
+    tools = [
     ]
 
     return tools
@@ -146,12 +159,15 @@ def create_tool(_index, chosen_pdf):
 @st.cache_resource
 def create_agent(chosen_class, chosen_pdf):
     memory = ConversationBufferMemory(memory_key="chat_history")
-    llm = OpenAI(temperature=0, model_name="gpt-3.5-turbo")
+    return tools
 
-    index = get_index(chosen_class, chosen_pdf)
-    tools = create_tool(index, chosen_pdf)
 
-    agent = initialize_agent(
+# Create agent with tools, llm and memory
+# Cache agent to avoid re-init'ing
+# Using langchain here for conversational ability
+@st.cache_resource
+def create_agent(chosen_class, chosen_pdf):
+    memory = ConversationBufferMemory(memory_key="chat_history")
         tools, llm, agent="conversational-react-description", memory=memory
     )
 
@@ -159,12 +175,14 @@ def create_agent(chosen_class, chosen_pdf):
 
 
 def query_gpt_memory(chosen_class, chosen_pdf, query):
+    return agent
+
+
+# Run query through agent to take advantage of 
+# conversational context
+def query_gpt_memory(chosen_class, chosen_pdf, query):
 
     agent = create_agent(chosen_class, chosen_pdf)
-    res = ""
-
-    try:
-        res = agent.run(input=query)
     except Exception as e:
         logging.error(e)
         res = "Something went wrong... Please try again."
@@ -174,12 +192,14 @@ def query_gpt_memory(chosen_class, chosen_pdf, query):
     return res
 
 
+    return res
+
+
 # ------------------- Render PDF ------------------- #
 
 
 @st.cache_data
 def show_pdf(folder_name, file_name):
-
     with tempfile.NamedTemporaryFile("wb") as f_src:
         logging.info(f"Downloading {file_name}...")
         s3.download_file(f"{folder_name}/{file_name}", f_src.name)
@@ -188,13 +208,8 @@ def show_pdf(folder_name, file_name):
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
 
         pdf_display = f"""
-        <iframe
-            src="data:application/pdf;base64,{base64_pdf}"
-            width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
+                </iframe>
         """
 
         st.markdown(pdf_display, unsafe_allow_html=True)
+
