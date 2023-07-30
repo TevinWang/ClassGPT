@@ -1,3 +1,4 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
@@ -18,13 +19,14 @@ with tab1:
         index=len(all_classes),
     )
 
-    if chosen_class != "--":
-        with st.form("upload_pdf"):
-            uploaded_files = st.file_uploader(
-                "Upload a PDF file", type="pdf", accept_multiple_files=True
+            chosen_class = st.selectbox(
+                "Select a class",
+                
+                # Sort class names alphabetically
+                sorted(list(all_classes.keys())) + ["--"], 
+                list(all_classes.keys()) + ["--"],
+                index=len(all_classes),
             )
-
-            submit_button = st.form_submit_button("Upload")
 
             if submit_button:
                 if len(uploaded_files) == 0:
@@ -85,3 +87,4 @@ with tab3:
                 else:
                     s3.remove_file(chosen_class, chosen_pdf)
                     st.success(f"{chosen_pdf} removed")
+
