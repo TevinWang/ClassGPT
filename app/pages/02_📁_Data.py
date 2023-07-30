@@ -1,8 +1,10 @@
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
+import os
 
 sidebar()
+bucket_name = "classgpt"
 bucket_name = "classgpt"
 s3 = S3(bucket_name)
 all_classes = s3.list_files()
@@ -85,3 +87,10 @@ with tab3:
                 else:
                     s3.remove_file(chosen_class, chosen_pdf)
                     st.success(f"{chosen_pdf} removed")
+
+        st.success(f"{chosen_class} removed")
+    else:
+        s3.remove_file(chosen_class, chosen_pdf)
+        os.remove(f"temp/{chosen_class}/{chosen_pdf}")
+        st.success(f"{chosen_pdf} removed")
+
