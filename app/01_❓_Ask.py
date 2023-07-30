@@ -1,3 +1,4 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
@@ -16,12 +17,13 @@ st.set_page_config(
 )
 
 # Session states
-# --------------
-if "chosen_class" not in st.session_state:
-    st.session_state.chosen_class = "--"
-
 if "chosen_pdf" not in st.session_state:
     st.session_state.chosen_pdf = "--"
+
+# Add conversation history to session state
+if "conversation_history" not in st.session_state:
+    st.session_state.memory = ""
+
 
 if "memory" not in st.session_state:
     st.session_state.memory = ""
@@ -72,10 +74,14 @@ if st.session_state.chosen_class != "--":
                 with st.spinner("Generating answer..."):
                     # res = query_gpt_memory(chosen_class, chosen_pdf, query)
                     res = query_gpt(chosen_class, chosen_pdf, query)
+                    
+                    # Save conversation to session state
+                    st.session_state.conversation_history += f"Human: {query}\nAI: {res}\n"
+                    
                     st.markdown(res)
 
                     # with st.expander("Memory"):
-                    #      st.write(st.session_state.memory.replace("\n", "\n\n"))
+                    #     st.write(st.session_state.conversation_history)
 
         with col2:
             show_pdf(chosen_class, chosen_pdf)
