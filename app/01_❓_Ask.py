@@ -1,6 +1,8 @@
 import streamlit as st
+import logging
 from components.sidebar import sidebar
 from s3 import S3
+from utils import query_gpt, query_gpt_memory, show_pdf
 from utils import query_gpt, query_gpt_memory, show_pdf
 
 st.set_page_config(
@@ -25,11 +27,14 @@ if "chosen_pdf" not in st.session_state:
 
 if "memory" not in st.session_state:
     st.session_state.memory = ""
+if "memory" not in st.session_state:
+    st.session_state.memory = ""
+
+# Set logging level
+logging.basicConfig(level=logging.INFO)
 
 
 sidebar()
-
-st.header("ClassGPT: ChatGPT for your lectures slides")
 
 bucket_name = "classgpt"
 s3 = S3(bucket_name)
@@ -78,4 +83,13 @@ if st.session_state.chosen_class != "--":
                     #      st.write(st.session_state.memory.replace("\n", "\n\n"))
 
         with col2:
-            show_pdf(chosen_class, chosen_pdf)
+                if query == "":
+                    st.error("Please enter a question")
+                with st.spinner("Generating answer..."):
+                    logging.info(f"Asking question: {query}")
+                    # res = query_gpt_memory(chosen_class, chosen_pdf, query)
+                    res = query_gpt(chosen_class, chosen_pdf, 
+                                    query.strip())
+                    st.markdown(res)
+
+                    # with st.expander("Memory"):
