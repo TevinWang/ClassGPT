@@ -1,3 +1,4 @@
+
 import base64
 import logging
 import os
@@ -11,45 +12,35 @@ from dotenv import load_dotenv
 from langchain import OpenAI
 
 # langchain
-from langchain.agents import Tool, initialize_agent
-from langchain.chains.conversation.memory import ConversationBufferMemory
-from langchain.chat_models import ChatOpenAI
+import base64
+import logging
+import os
+import tempfile
+from io import BytesIO
 
-# llama_index
-from llama_index import Document, GPTSimpleVectorIndex, LLMPredictor
-from pypdf import PdfReader
 from s3 import S3
 
 # set to DEBUG for more verbose logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
-load_dotenv()
-if os.getenv("OPENAI_API_KEY") is None:
-    st.error("OpenAI API key not set")
-else:
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+# langchain
+from langchain.agents import Tool, initialize_agent
+from langchain.chat_models import ChatOpenAI
+
+# llama_index
+from llama_index import Document, GPTSimpleVectorIndex, LLMPredictor
+# from pypdf import PdfReader
+from s3 import S3
+
+# set to DEBUG for more verbose logging
+logging.basicConfig(level=logging.INFO)
 
 
 s3 = S3("classgpt")
 
 
-# ------------------- index creation ------------------- #
-
-
-def parse_pdf(file: BytesIO):
-
-    pdf = PdfReader(file)
-    text_list = []
-
-    # Get the number of pages in the PDF document
-    num_pages = len(pdf.pages)
-
-    # Iterate over every page
-    for page in range(num_pages):
-        # Extract the text from the page
-        page_text = pdf.pages[page].extract_text()
-        text_list.append(page_text)
+# ----------------        text_list.append(page_text)
 
     text = "\n".join(text_list)
 
@@ -188,13 +179,4 @@ def show_pdf(folder_name, file_name):
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
 
         pdf_display = f"""
-        <iframe
-            src="data:application/pdf;base64,{base64_pdf}"
-            width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
-        """
-
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        
