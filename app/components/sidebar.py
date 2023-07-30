@@ -1,8 +1,7 @@
-import os
-
-import streamlit as st
+from streamlit import st
 
 
+def sidebar():
 def sidebar():
     with st.sidebar:
         st.markdown(
@@ -10,13 +9,13 @@ def sidebar():
             "1. Add your files in 📁 Data page\n"
             "2. Ask a question on the ❓ Ask page\n"
         )
-        api_key_input = st.text_input(
-            "OpenAI API Key",
             type="password",
             placeholder="sk-xxx...",
             help="Get an API key here 👉 https://platform.openai.com/account/api-keys.",
-            value="",
+            value=st.secrets["OPENAI_API_KEY"],
         )
+
+        if api_key_input:
 
         if api_key_input:
             os.environ["OPENAI_API_KEY"] = api_key_input
@@ -37,3 +36,5 @@ def sidebar():
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
             """
         )
+
+st.experimental_singleton()
