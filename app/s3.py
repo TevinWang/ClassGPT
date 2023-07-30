@@ -1,10 +1,13 @@
-from collections import defaultdict
 
 import boto3
 import botocore
+import logging
+# Set logging
+logging.basicConfig(level=logging.INFO)
 
-
+# S3 class
 class S3:
+    """
     """
     Class for interacting with S3
 
@@ -25,8 +28,8 @@ class S3:
         upload_files: Upload a file to the S3 bucket
         remove_folder: Remove a folder from the S3 bucket
         remove_file: Remove a file from the S3 bucket
+        download_file: Download a file from the S3 bucket
     """
-
     def __init__(self, bucket_name):
         self.bucket_name = bucket_name
         self.s3 = boto3.resource("s3")
@@ -65,12 +68,11 @@ class S3:
             else:
                 raise
 
-    def create_folder(self, folder_name):
-        if not self.folder_exists(folder_name):
-            self.bucket.put_object(Key=f"{folder_name}/")
-
     def upload_files(self, file_obj, file_path):
         self.bucket.upload_fileobj(file_obj, file_path)
+        logging.info(f"Uploaded {file_path}")
+    def remove_folder(self, folder_name):
+        if self.folder_exists(folder_name):
 
     def remove_folder(self, folder_name):
         if self.folder_exists(folder_name):
@@ -79,9 +81,12 @@ class S3:
 
     def remove_file(self, folder_name, file_name):
         if self.folder_exists(folder_name):
-            self.bucket.objects.filter(Prefix=f"{folder_name}/{file_name}").delete(
                 Delete={"Objects": [{"Key": f"{folder_name}/{file_name}"}]}
             )
+    def download_file(self, from_file_path, to_file_path):
+        self.bucket.download_file(from_file_path, to_file_path)
+        logging.info(f"Downloaded {from_file_path} to {to_file_path}")
 
     def download_file(self, from_file_path, to_file_path):
         self.bucket.download_file(from_file_path, to_file_path)
+
