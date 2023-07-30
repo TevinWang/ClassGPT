@@ -1,3 +1,4 @@
+
 import os
 
 import streamlit as st
@@ -33,7 +34,10 @@ def sidebar():
             This tool is a work in progress.
 
             Contributions are welcomed on [GitHub](https://github.com/benthecoder/ClassGPT)
+            Contributions are welcomed on [GitHub](https://github.com/benthecoder/ClassGPT)
 
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
+            v1.0
             """
         )
+
