@@ -1,5 +1,8 @@
+import logging
+
 import streamlit as st
 from components.sidebar import sidebar
+from s3 import S3
 from s3 import S3
 
 sidebar()
@@ -85,3 +88,32 @@ with tab3:
                 else:
                     s3.remove_file(chosen_class, chosen_pdf)
                     st.success(f"{chosen_pdf} removed")
+
+
+sidebar()
+bucket_name = "classgpt"
+
+logging.info("Initializing S3 client")
+s3 = S3(bucket_name)
+all_classes = s3.list_files()
+
+
+        if submit_button:
+            if add_class == "":
+                logging.warning("No class name provided")
+
+                st.error("Please enter a class name")
+            else:
+                s3.create_folder(add_class)
+            all_pdfs + ["--"],
+            index=len(all_pdfs),
+        )
+
+        if chosen_pdf != "--":
+            submit_button = st.button("Remove")
+
+            logging.info(f"Removing {chosen_class}/{chosen_pdf}")
+
+            if submit_button:
+                if chosen_pdf == "all":
+                    s3.remove_folder(chosen_class)
