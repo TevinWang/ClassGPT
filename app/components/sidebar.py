@@ -1,3 +1,4 @@
+
 import os
 
 import streamlit as st
@@ -20,12 +21,12 @@ def sidebar():
 
         if api_key_input:
             os.environ["OPENAI_API_KEY"] = api_key_input
-            st.success("API key set")
+                       "---
 
-        st.markdown(
-            """
-            ---
-            ## About
+                       ClassGPT lets you ask questions about your class \
+                       lectures and get accurate answers
+
+                       This tool is a work in progress.
 
             ClassGPT lets you ask questions about your class \
                 lectures and get accurate answers
@@ -37,3 +38,4 @@ def sidebar():
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
             """
         )
+

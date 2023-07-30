@@ -1,3 +1,4 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
@@ -68,14 +69,13 @@ if st.session_state.chosen_class != "--":
 
             if st.button("Ask"):
                 if query == "":
-                    st.error("Please enter a question")
-                with st.spinner("Generating answer..."):
-                    # res = query_gpt_memory(chosen_class, chosen_pdf, query)
-                    res = query_gpt(chosen_class, chosen_pdf, query)
-                    st.markdown(res)
-
+                        res = query_gpt(chosen_class, chosen_pdf, query)
+                        st.markdown(res)
+                        with st.expander("Memory"):
+#                              st.write(st.session_state.memory.replace("\n", "\n\n"))
                     # with st.expander("Memory"):
                     #      st.write(st.session_state.memory.replace("\n", "\n\n"))
 
         with col2:
             show_pdf(chosen_class, chosen_pdf)
+
