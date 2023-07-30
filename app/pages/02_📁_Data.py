@@ -1,8 +1,10 @@
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
+import os
 
 sidebar()
+bucket_name = "classgpt"
 bucket_name = "classgpt"
 s3 = S3(bucket_name)
 all_classes = s3.list_files()
@@ -85,3 +87,32 @@ with tab3:
                 else:
                     s3.remove_file(chosen_class, chosen_pdf)
                     st.success(f"{chosen_pdf} removed")
+
+        st.success(f"{chosen_class} removed")
+    else:
+        s3.remove_file(chosen_class, chosen_pdf)
+        os.remove(f"temp/{chosen_class}/{chosen_pdf}")
+        st.success(f"{chosen_pdf} removed")
+
+    s3 resource to manage files in an S3 bucket.
+"""
+import boto3
+import os
+import botocore
+
+
+    def upload_files(self, file_obj, file_path):
+        """Upload a file object to S3"""
+        self.bucket.upload_fileobj(file_obj, file_path)
+        os.makedirs(os.path.dirname(f"temp/{file_path}"), exist_ok=True)
+
+    def remove_folder(self, folder_name):
+        """Remove a folder from S3"""
+                Delete={"Objects": [{"Key": f"{folder_name}/{file_name}"}]}
+            )
+
+        os.remove(f"temp/{folder_name}/{file_name}")
+
+    def download_file(self, from_file_path, to_file_path):
+        """Download a file from S3 to a local path"""
+        self.bucket.download_file(from_file_path, to_file_path)
