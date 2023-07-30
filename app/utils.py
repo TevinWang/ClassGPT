@@ -1,3 +1,4 @@
+
 import base64
 import logging
 import os
@@ -137,15 +138,17 @@ def create_tool(_index, chosen_pdf):
             func=lambda q: str(_index.query(q)),
             description="Useful to answering questions about the given file",
             return_direct=True,
-        ),
-    ]
+    res = agent.run(input=query)
+    except Exception as e:
+        logging.error(e)
+        res = "Sorry, something went wrong. Please try again."
 
-    return tools
+    # Save conversation to session state  
+    st.session_state.conversation_history += f"Human: {query}\nAI: {res}\n"
+    
+    return res
 
 
-@st.cache_resource
-def create_agent(chosen_class, chosen_pdf):
-    memory = ConversationBufferMemory(memory_key="chat_history")
     llm = OpenAI(temperature=0, model_name="gpt-3.5-turbo")
 
     index = get_index(chosen_class, chosen_pdf)
@@ -188,13 +191,4 @@ def show_pdf(folder_name, file_name):
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
 
         pdf_display = f"""
-        <iframe
-            src="data:application/pdf;base64,{base64_pdf}"
-            width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
-        """
-
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        
