@@ -1,3 +1,4 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
@@ -13,12 +14,13 @@ st.set_page_config(
         "Report a bug": "https://github.com/benthecoder/ClassGPT/issues",
         "About": "ClassGPT is a chatbot that answers questions about your pdf files",
     },
-)
-
-# Session states
-# --------------
-if "chosen_class" not in st.session_state:
-    st.session_state.chosen_class = "--"
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    # Set menu items to provide helpful links for users
+    menu_items={
+        "Get Help": "https://twitter.com/benthecoder1",
+        "Report a bug": "https://github.com/benthecoder/ClassGPT/issues",
 
 if "chosen_pdf" not in st.session_state:
     st.session_state.chosen_pdf = "--"
@@ -27,42 +29,38 @@ if "memory" not in st.session_state:
     st.session_state.memory = ""
 
 
-sidebar()
-
-st.header("ClassGPT: ChatGPT for your lectures slides")
-
-bucket_name = "classgpt"
-s3 = S3(bucket_name)
+if "chosen_pdf" not in st.session_state:
+    st.session_state.chosen_pdf = "--"
+    # Initialize chosen PDF to default "--" value
+if "memory" not in st.session_state:
+    st.session_state.memory = ""
 
 all_classes = s3.list_files()
 
-chosen_class = st.selectbox(
-    "Select a class", list(all_classes.keys()) + ["--"], index=len(all_classes)
-)
-
-st.session_state.chosen_class = chosen_class
-
+st.header("ClassGPT: ChatGPT for your lectures slides")
+# Initialize S3 client
+bucket_name = "classgpt"
+s3 = S3(bucket_name)
 if st.session_state.chosen_class != "--":
     all_pdfs = all_classes[chosen_class]
-
+    list(all_classes.keys()) + ["--"],
+    index=len(all_classes),
+)
+# Store selected class in session state
+st.session_state.chosen_class = chosen_class
+# Check if a class is selected
+if st.session_state.chosen_class != "--":
+    all_pdfs = all_classes[chosen_class]
+    # Dropdown to select PDF file
     chosen_pdf = st.selectbox(
-        "Select a PDF file", all_pdfs + ["--"], index=len(all_pdfs)
+        "Select a PDF file",
+        all_pdfs + ["--"],
+            st.markdown(
     )
-
     st.session_state.chosen_pdf = chosen_pdf
-
+    # Check if a PDF is selected
     if st.session_state.chosen_pdf != "--":
         col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("Ask a question")
-            st.markdown(
-                """
-                Here are some prompts:
-                - `What is the main idea of this lecture in simple terms?`
-                - `Summarize the main points of slide 5`
-                - `Provide 5 practice questions on this lecture with answers`
-                """
             )
             query = st.text_area("Enter your question", max_chars=200)
 
@@ -78,4 +76,18 @@ if st.session_state.chosen_class != "--":
                     #      st.write(st.session_state.memory.replace("\n", "\n\n"))
 
         with col2:
+                )
+                query = st.text_area("Enter your question", max_chars=200)
+                # Button to trigger answer generation
+                if st.button("Ask"):
+                    if query == "":
+                        st.error("Please enter a question")
+                        st.markdown(res)
+                        # Uncomment to show chat history
+                        # with st.expander("Memory"):
+                        #      st.write(st.session_state.memory.replace("\n", "\n\n"))
+        with col2:
+            # Display selected PDF
             show_pdf(chosen_class, chosen_pdf)
+
+
