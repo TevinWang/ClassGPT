@@ -1,3 +1,4 @@
+
 import base64
 import logging
 import os
@@ -38,13 +39,13 @@ s3 = S3("classgpt")
 
 
 def parse_pdf(file: BytesIO):
+        2. Wrap logging calls around key actions
 
-    pdf = PdfReader(file)
-    text_list = []
+        3. Refactor parts that could be split into separate functions - like 
+        the index handling logic
+-->
 
-    # Get the number of pages in the PDF document
-    num_pages = len(pdf.pages)
-
+import base64
     # Iterate over every page
     for page in range(num_pages):
         # Extract the text from the page
@@ -65,22 +66,25 @@ def create_index(pdf_obj, folder_name, file_name):
     logging.info("Generating new index...")
     documents = parse_pdf(pdf_obj)
 
-    logging.info("Creating index...")
-    index = GPTSimpleVectorIndex(documents)
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path = f"{tmp_dir}/{index_name}"
-        logging.info("Saving index...")
+# set to DEBUG for more verbose logging
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.info("Utils module loaded")
+
+
+load_dotenv()
+if os.getenv("OPENAI_API_KEY") is None:
         index.save_to_disk(tmp_path)
 
         with open(tmp_path, "rb") as f:
             logging.info("Uploading index to s3...")
-            s3.upload_files(f, f"{folder_name}/{index_name}")
 
-    return index
+s3 = S3("classgpt")
+
+logging.info("S3 client initialized")
 
 
-@st.cache_resource(show_spinner=False)
+# ----------------@st.cache_resource(show_spinner=False)
 def get_index(folder_name, file_name):
     """
     Get the index for a given PDF file.
@@ -188,13 +192,4 @@ def show_pdf(folder_name, file_name):
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
 
         pdf_display = f"""
-        <iframe
-            src="data:application/pdf;base64,{base64_pdf}"
-            width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
-        """
-
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        
