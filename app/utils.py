@@ -1,3 +1,4 @@
+
 import base64
 import logging
 import os
@@ -21,12 +22,12 @@ from pypdf import PdfReader
 from s3 import S3
 
 # set to DEBUG for more verbose logging
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
-
-load_dotenv()
-if os.getenv("OPENAI_API_KEY") is None:
-    st.error("OpenAI API key not set")
+import base64
+import logging
+import os
+import sys
+import tempfile
+from io import BytesIO
 else:
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -35,49 +36,56 @@ s3 = S3("classgpt")
 
 
 # ------------------- index creation ------------------- #
+from pypdf import PdfReader
+from s3 import S3
 
+# Load environment variables
+load_dotenv()
 
-def parse_pdf(file: BytesIO):
-
-    pdf = PdfReader(file)
-    text_list = []
+# Set logging
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     # Get the number of pages in the PDF document
-    num_pages = len(pdf.pages)
+    st.error("OpenAI API key not set")
+else:
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    # Iterate over every page
-    for page in range(num_pages):
-        # Extract the text from the page
-        page_text = pdf.pages[page].extract_text()
+if not openai.api_key:
+    st.error("OpenAI API key not valid")
+
+@@ -156,7 +163,9 @@
+def query_gpt_memory(chosen_class, chosen_pdf, query):
         text_list.append(page_text)
 
     text = "\n".join(text_list)
 
     return [Document(text)]
-
-
-def create_index(pdf_obj, folder_name, file_name):
-    """
-    Create an index for a given PDF file and upload it to S3.
-    """
+    except Exception as e:
+        logging.error(e)
+        res = "Something went wrong... Please try again."
+        st.error("Error in query execution, please try again")
+    st.session_state.memory = agent.memory.buffer
     index_name = file_name.replace(".pdf", ".json")
 
     logging.info("Generating new index...")
     documents = parse_pdf(pdf_obj)
 
-    logging.info("Creating index...")
-    index = GPTSimpleVectorIndex(documents)
-
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path = f"{tmp_dir}/{index_name}"
-        logging.info("Saving index...")
+    with tempfile.NamedTemporaryFile("wb") as f_src:
+        logging.info(f"Downloading {file_name}...")
+        s3.download_file(f"{folder_name}/{file_name}", f_src.name)
+        if not s3.file_exists(folder_name, file_name):
+            st.error(f"File {file_name} not found in S3")
+        with open(f_src.name, "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
         index.save_to_disk(tmp_path)
 
         with open(tmp_path, "rb") as f:
             logging.info("Uploading index to s3...")
-            s3.upload_files(f, f"{folder_name}/{index_name}")
-
-    return index
+            type="application/pdf"
+            style="min-width: 400px;"
+        >
+        </iframe>
+        ''', unsafe_allow_html=True)
 
 
 @st.cache_resource(show_spinner=False)
@@ -188,13 +196,4 @@ def show_pdf(folder_name, file_name):
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
 
         pdf_display = f"""
-        <iframe
-            src="data:application/pdf;base64,{base64_pdf}"
-            width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
-        """
-
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        
