@@ -1,3 +1,4 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
@@ -25,6 +26,11 @@ if "chosen_pdf" not in st.session_state:
 
 if "memory" not in st.session_state:
     st.session_state.memory = ""
+# Set api key if provided
+if os.getenv('OPENAI_API_KEY'):
+	openai.api_key = os.getenv('OPENAI_API_KEY')
+else:
+	st.error("OpenAI API key not set")
 
 
 sidebar()
@@ -68,10 +74,12 @@ if st.session_state.chosen_class != "--":
 
             if st.button("Ask"):
                 if query == "":
-                    st.error("Please enter a question")
-                with st.spinner("Generating answer..."):
-                    # res = query_gpt_memory(chosen_class, chosen_pdf, query)
-                    res = query_gpt(chosen_class, chosen_pdf, query)
+				# Query GPT model with memory
+				# res = query_gpt_memory(chosen_class, chosen_pdf, query)
+@@ -76,3 +78,4 @@
+
+# with st.expander("Memory"):
+#      st.write(st.session_state.memory.replace("\n", "\n\n"))
                     st.markdown(res)
 
                     # with st.expander("Memory"):
@@ -79,3 +87,4 @@ if st.session_state.chosen_class != "--":
 
         with col2:
             show_pdf(chosen_class, chosen_pdf)
+
