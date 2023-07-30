@@ -1,32 +1,23 @@
+
 import os
 
 import streamlit as st
+    at the top of the file to load the API key from the environment.
 
+    Also remove the hardcoded API key input box, as we want to enforce
+    storing the key safely in the environment rather than in the code.
 
-def sidebar():
-    with st.sidebar:
-        st.markdown(
-            "## How to use\n"
+    Lastly, fix the path of the logo image to point to a real location.
+-->
+
             "1. Add your files in 📁 Data page\n"
             "2. Ask a question on the ❓ Ask page\n"
-        )
-        api_key_input = st.text_input(
-            "OpenAI API Key",
-            type="password",
-            placeholder="sk-xxx...",
-            help="Get an API key here 👉 https://platform.openai.com/account/api-keys.",
-            value="",
-        )
-
-        if api_key_input:
-            os.environ["OPENAI_API_KEY"] = api_key_input
-            st.success("API key set")
+        import os
+        
+        os.environ["OPENAI_API_KEY"] = api_key_input
+        st.success("Successfully set environment variable OPENAI_API_KEY")
 
         st.markdown(
-            """
-            ---
-            ## About
-
             ClassGPT lets you ask questions about your class \
                 lectures and get accurate answers
 
@@ -37,3 +28,19 @@ def sidebar():
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
             """
         )
+
+                Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
+                """
+        )
+import os
+
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+
+def sidebar():
+    st.markdown(
+        2. Ask a question on the ❓ Ask page
+        """
+    )
+
+        ClassGPT lets you ask questions about your class \
+            lectures and get accurate answers
