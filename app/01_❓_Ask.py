@@ -1,7 +1,8 @@
 import streamlit as st
-from components.sidebar import sidebar
+from app.components.sidebar import sidebar
 from s3 import S3
 from utils import query_gpt, query_gpt_memory, show_pdf
+
 
 st.set_page_config(
     page_title="ClassGPT",
@@ -25,29 +26,25 @@ if "chosen_pdf" not in st.session_state:
 
 if "memory" not in st.session_state:
     st.session_state.memory = ""
+    st.session_state.chosen_pdf = "--"
+
+if "memory" not in st.session_state:
 
 
 sidebar()
-
+s3 = S3(bucket_name)
 st.header("ClassGPT: ChatGPT for your lectures slides")
 
 bucket_name = "classgpt"
-s3 = S3(bucket_name)
-
-all_classes = s3.list_files()
+files = S3(bucket_name).list_files()
 
 chosen_class = st.selectbox(
     "Select a class", list(all_classes.keys()) + ["--"], index=len(all_classes)
 )
 
-st.session_state.chosen_class = chosen_class
 
 if st.session_state.chosen_class != "--":
     all_pdfs = all_classes[chosen_class]
-
-    chosen_pdf = st.selectbox(
-        "Select a PDF file", all_pdfs + ["--"], index=len(all_pdfs)
-    )
 
     st.session_state.chosen_pdf = chosen_pdf
 
@@ -79,3 +76,10 @@ if st.session_state.chosen_class != "--":
 
         with col2:
             show_pdf(chosen_class, chosen_pdf)
+
+                    # res = query_gpt_memory(chosen_class, chosen_pdf, query)
+                    res = query_gpt(chosen_class, chosen_pdf, query)
+                    st.markdown(res)
+        with col2:
+            show_pdf(chosen_class, chosen_pdf)
+
