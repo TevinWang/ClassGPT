@@ -1,3 +1,4 @@
+
 import streamlit as st
 from components.sidebar import sidebar
 from s3 import S3
@@ -51,14 +52,13 @@ with tab2:
             if add_class == "":
                 st.error("Please enter a class name")
             else:
-                s3.create_folder(add_class)
-                st.success(f"Class {add_class} added")
+tab1, tab2, tab3 = st.tabs(["Upload data", "Add Class", "Delete"])
 
-with tab3:
-    st.subheader("Delete a class or a PDF file")
-
+with tab1:
+    st.header("Upload new lectures")
     chosen_class = st.selectbox(
-        "Select a class to delete",
+        "Select a class",
+        list(all_classes.keys()) + ["--"],
         list(all_classes.keys()) + ["--"],
         index=len(all_classes),
     )
@@ -85,3 +85,11 @@ with tab3:
                 else:
                     s3.remove_file(chosen_class, chosen_pdf)
                     st.success(f"{chosen_pdf} removed")
+
+-        self.bucket.objects.filter(Prefix=f"{folder_name}/{file_name}").delete(
+-            Delete={"Objects": [{"Key": f"{folder_name}/{file_name}"}]}
+-        )
++        self.bucket.delete_objects(Delete={"Objects": [{"Key": f"{folder_name}/{file_name}"}]})
+
+    def download_file(self, from_file_path, to_file_path):
+        self.bucket.download_file(from_file_path, to_file_path)
