@@ -1,10 +1,13 @@
+# Import OS module
 import os
 
+import streamlit as st
 import streamlit as st
 
 
 def sidebar():
     with st.sidebar:
+        # Sidebar content
         st.markdown(
             "## How to use\n"
             "1. Add your files in 📁 Data page\n"
@@ -18,15 +21,13 @@ def sidebar():
             value="",
         )
 
-        if api_key_input:
-            os.environ["OPENAI_API_KEY"] = api_key_input
-            st.success("API key set")
+                os.environ["OPENAI_API_KEY"] = api_key_input
+                st.success("API key set")
 
-        st.markdown(
+        st.markdown( # About section
             """
             ---
             ## About
-
             ClassGPT lets you ask questions about your class \
                 lectures and get accurate answers
 
@@ -37,3 +38,4 @@ def sidebar():
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
             """
         )
+
