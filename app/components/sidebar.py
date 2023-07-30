@@ -1,13 +1,16 @@
+
 import os
 
 import streamlit as st
 
+import os
+
+import streamlit as st
+from dotenv import load_dotenv
+load_dotenv()
+
 
 def sidebar():
-    with st.sidebar:
-        st.markdown(
-            "## How to use\n"
-            "1. Add your files in 📁 Data page\n"
             "2. Ask a question on the ❓ Ask page\n"
         )
         api_key_input = st.text_input(
@@ -25,15 +28,21 @@ def sidebar():
         st.markdown(
             """
             ---
+            API key set
+
+        st.markdown(
+            """
+
+            ---
             ## About
 
-            ClassGPT lets you ask questions about your class \
-                lectures and get accurate answers
-
-            This tool is a work in progress.
 
             Contributions are welcomed on [GitHub](https://github.com/benthecoder/ClassGPT)
 
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
             """
         )
+            Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
+            """
+        )
+
