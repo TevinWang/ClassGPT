@@ -1,5 +1,8 @@
+# Import modules
+
 import base64
 import logging
+import os
 import os
 import sys
 import tempfile
@@ -18,26 +21,29 @@ from langchain.chat_models import ChatOpenAI
 # llama_index
 from llama_index import Document, GPTSimpleVectorIndex, LLMPredictor
 from pypdf import PdfReader
-from s3 import S3
-
 # set to DEBUG for more verbose logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-
+# Load environment variables
 load_dotenv()
 if os.getenv("OPENAI_API_KEY") is None:
     st.error("OpenAI API key not set")
-else:
+load_dotenv()
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
+# Initialize S3 client
 s3 = S3("classgpt")
 
 
 # ------------------- index creation ------------------- #
 
 
-def parse_pdf(file: BytesIO):
+def parse_pdf(file: BytesIO): 
+    # Parse PDF into list of pages
+
+    pdf = PdfReader(file)
+    text_list = []
 
     pdf = PdfReader(file)
     text_list = []
@@ -49,12 +55,13 @@ def parse_pdf(file: BytesIO):
     for page in range(num_pages):
         # Extract the text from the page
         page_text = pdf.pages[page].extract_text()
-        text_list.append(page_text)
-
-    text = "\n".join(text_list)
-
     return [Document(text)]
 
+
+# Create index for PDF
+def create_index(pdf_obj, folder_name, file_name):
+    """
+    Create an index for a given PDF file and upload it to S3.
 
 def create_index(pdf_obj, folder_name, file_name):
     """
@@ -75,12 +82,13 @@ def create_index(pdf_obj, folder_name, file_name):
 
         with open(tmp_path, "rb") as f:
             logging.info("Uploading index to s3...")
-            s3.upload_files(f, f"{folder_name}/{index_name}")
-
     return index
 
 
+# Get index for PDF from cache or create if missing
 @st.cache_resource(show_spinner=False)
+def get_index(folder_name, file_name):
+    """
 def get_index(folder_name, file_name):
     """
     Get the index for a given PDF file.
@@ -109,11 +117,12 @@ def get_index(folder_name, file_name):
 
 def query_gpt(chosen_class, chosen_pdf, query):
 
+
+def query_gpt(chosen_class, chosen_pdf, query):
+    # Query GPT model with PDF content index
+
     if not os.getenv("OPENAI_API_KEY"):
         st.error("Enter your OpenAI API key in the sidebar.")
-        st.stop()
-
-    # LLM Predictor (gpt-3.5-turbo)
     llm_predictor = LLMPredictor(
         llm=ChatOpenAI(
             temperature=0,
@@ -129,11 +138,12 @@ def query_gpt(chosen_class, chosen_pdf, query):
     return response
 
 
+
 @st.cache_resource
+# Create tools for agent with PDF index
 def create_tool(_index, chosen_pdf):
     tools = [
         Tool(
-            name=f"{chosen_pdf} index",
             func=lambda q: str(_index.query(q)),
             description="Useful to answering questions about the given file",
             return_direct=True,
@@ -141,12 +151,13 @@ def create_tool(_index, chosen_pdf):
     ]
 
     return tools
+    return tools
 
 
+# Initialize agent with tools, memory, and LLMs
 @st.cache_resource
 def create_agent(chosen_class, chosen_pdf):
     memory = ConversationBufferMemory(memory_key="chat_history")
-    llm = OpenAI(temperature=0, model_name="gpt-3.5-turbo")
 
     index = get_index(chosen_class, chosen_pdf)
     tools = create_tool(index, chosen_pdf)
@@ -155,11 +166,12 @@ def create_agent(chosen_class, chosen_pdf):
         tools, llm, agent="conversational-react-description", memory=memory
     )
 
-    return agent
-
 
 def query_gpt_memory(chosen_class, chosen_pdf, query):
+    # Query agent with conversation history/memory 
 
+    agent = create_agent(chosen_class, chosen_pdf)
+    res = ""
     agent = create_agent(chosen_class, chosen_pdf)
     res = ""
 
@@ -175,26 +187,19 @@ def query_gpt_memory(chosen_class, chosen_pdf, query):
 
 
 # ------------------- Render PDF ------------------- #
-
-
 @st.cache_data
 def show_pdf(folder_name, file_name):
 
+    # Download PDF from S3
     with tempfile.NamedTemporaryFile("wb") as f_src:
         logging.info(f"Downloading {file_name}...")
         s3.download_file(f"{folder_name}/{file_name}", f_src.name)
-
-        with open(f_src.name, "rb") as f:
+        logging.info(f"Downloading {file_name}...")
+        s3.download_file(f"{folder_name}/{file_name}", f_src.name)
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
 
         pdf_display = f"""
+        <!-- Embed PDF -->
         <iframe
             src="data:application/pdf;base64,{base64_pdf}"
             width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
-        """
-
-        st.markdown(pdf_display, unsafe_allow_html=True)
