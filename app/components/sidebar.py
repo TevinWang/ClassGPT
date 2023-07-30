@@ -1,3 +1,4 @@
+
 import os
 
 import streamlit as st
@@ -37,3 +38,21 @@ def sidebar():
             Made with ♥️ by [Benedict Neo](https://benneo.super.site/)
             """
         )
+
+        "Delete a class or a PDF file"
+
+        chosen_class = st.selectbox(
+            "Select a class",
+            list(all_classes.keys()) + ["--"],
+            index=len(all_classes),
+        )
+        # Remove empty values
+        all_pdfs = [x for x in all_pdfs if x]
+
+        chosen_file = st.selectbox(
+            "Select a PDF file or choose 'all' to delete the whole class",
+            all_pdfs + ["--"],
+            index=len(all_pdfs),
+
+        if chosen_pdf != "--":
+            submit_button = st.button("Remove")
