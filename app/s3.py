@@ -1,7 +1,9 @@
 from collections import defaultdict
 
+# boto3 for interacting with S3
 import boto3
 import botocore
+
 
 
 class S3:
@@ -14,6 +16,9 @@ class S3:
     Attributes:
         bucket_name (str): Name of the S3 bucket
         s3 (boto3.resource): S3 resource
+        # boto3 resource provides high-level abstraction 
+        # for interacting with S3 like listing buckets, 
+        # uploading objects etc.
         bucket (boto3.Bucket): S3 bucket
 
     Methods:
@@ -27,24 +32,30 @@ class S3:
         remove_file: Remove a file from the S3 bucket
     """
 
+
     def __init__(self, bucket_name):
         self.bucket_name = bucket_name
+        # Initialize boto3 resource
         self.s3 = boto3.resource("s3")
+        # Get bucket object reference
         self.bucket = self.s3.Bucket(bucket_name)
 
     def list_folders(self):
         folders = set()
+        # Filter only objects that sit directly 
+        # in bucket (these are folders)
         for obj in self.bucket.objects.filter():
             folders.add(obj.key.split("/")[0])
 
-        return folders
+
 
     def list_files(self):
         classes = defaultdict(list)
-
-        # loop through only the parent directory
+        # Loop through objects and extract class name 
+        # and file name
         for obj in self.bucket.objects.filter():
             cname, fname = obj.key.split("/")
+            if not fname.endswith(".json"):
             if not fname.endswith(".json"):
                 classes[cname].append(fname)
 
@@ -56,12 +67,13 @@ class S3:
         return False
 
     def file_exists(self, folder_name, file_name):
+            return True
+        return False
+
+    # Check if a file exists using boto3 error handling
+    def file_exists(self, folder_name, file_name):
         try:
             self.s3.Object(self.bucket_name, f"{folder_name}/{file_name}").load()
-            return True
-        except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                return False
             else:
                 raise
 
@@ -77,11 +89,20 @@ class S3:
             for key in self.bucket.objects.filter(Prefix=f"{folder_name}/"):
                 key.delete()
 
-    def remove_file(self, folder_name, file_name):
-        if self.folder_exists(folder_name):
-            self.bucket.objects.filter(Prefix=f"{folder_name}/{file_name}").delete(
-                Delete={"Objects": [{"Key": f"{folder_name}/{file_name}"}]}
-            )
+        if not self.folder_exists(folder_name):
+            self.bucket.put_object(Key=f"{folder_name}/")
+
+    # Upload file obj
+    def upload_files(self, file_obj, file_path):
+        self.bucket.upload_fileobj(file_obj, file_path)
 
     def download_file(self, from_file_path, to_file_path):
         self.bucket.download_file(from_file_path, to_file_path)
+
+                Delete={"Objects": [{"Key": f"{folder_name}/{file_name}"}]}
+            )
+
+    # Download file utility
+    def download_file(self, from_file_path, to_file_path):
+        self.bucket.download_file(from_file_path, to_file_path)
+
