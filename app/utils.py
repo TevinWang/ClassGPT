@@ -1,3 +1,4 @@
+
 import base64
 import logging
 import os
@@ -58,12 +59,14 @@ def parse_pdf(file: BytesIO):
 
 def create_index(pdf_obj, folder_name, file_name):
     """
-    Create an index for a given PDF file and upload it to S3.
-    """
-    index_name = file_name.replace(".pdf", ".json")
+    index = GPTSimpleVectorIndex(documents)
 
-    logging.info("Generating new index...")
-    documents = parse_pdf(pdf_obj)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        logging.info(f"Temp directory: {tmp_dir}")
+        
+        tmp_path = f"{tmp_dir}/{index_name}"
+        logging.info("Saving index...")
+        index.save_to_disk(tmp_path)
 
     logging.info("Creating index...")
     index = GPTSimpleVectorIndex(documents)
@@ -132,12 +135,13 @@ def query_gpt(chosen_class, chosen_pdf, query):
 @st.cache_resource
 def create_tool(_index, chosen_pdf):
     tools = [
-        Tool(
-            name=f"{chosen_pdf} index",
-            func=lambda q: str(_index.query(q)),
-            description="Useful to answering questions about the given file",
-            return_direct=True,
-        ),
+    response = index.query(query, llm_predictor=llm_predictor)
+
+    # logging.info(response.get_formatted_sources())
+    logging.info(f"Response: {response}")
+
+    return response
+
     ]
 
     return tools
@@ -181,20 +185,10 @@ def query_gpt_memory(chosen_class, chosen_pdf, query):
 def show_pdf(folder_name, file_name):
 
     with tempfile.NamedTemporaryFile("wb") as f_src:
-        logging.info(f"Downloading {file_name}...")
-        s3.download_file(f"{folder_name}/{file_name}", f_src.name)
+    res = ""
 
-        with open(f_src.name, "rb") as f:
-            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-
-        pdf_display = f"""
-        <iframe
-            src="data:application/pdf;base64,{base64_pdf}"
-            width="100%" height="1000"
-            type="application/pdf"
-            style="min-width: 400px;"
-        >
-        </iframe>
-        """
-
-        st.markdown(pdf_display, unsafe_allow_html=True)
+    try:
+        res = agent.run(input=query.strip())
+    except Exception as e:
+        logging.error(e)
+        res = "Something went wrong... Please try again."
